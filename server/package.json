@@ -1,0 +1,20 @@
+{
+  "name": "asset-pipeline-server",
+  "version": "1.0.0",
+  "description": "Backend API for AI-Generated 3D Asset Pipeline",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "three": "^0.172.0"
+  }
+}
