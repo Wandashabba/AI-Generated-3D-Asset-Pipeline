@@ -18,15 +18,22 @@ export async function generateFromText(prompt) {
   const formData = new FormData();
   formData.append('prompt', prompt);
 
-  const { data } = await client.post('/generate', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  try {
+    const { data } = await client.post('/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-  if (!data.success) {
-    throw new Error(data.error?.message || 'Generation failed');
+    if (!data.success) {
+      throw new Error(data.error?.message || 'Generation failed');
+    }
+
+    return data.data;
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      throw new Error(err.response.data.error.message);
+    }
+    throw err;
   }
-
-  return data.data;
 }
 
 /**
@@ -40,15 +47,22 @@ export async function generateFromImage(imageFile, prompt = '') {
   formData.append('image', imageFile);
   if (prompt) formData.append('prompt', prompt);
 
-  const { data } = await client.post('/generate', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  try {
+    const { data } = await client.post('/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-  if (!data.success) {
-    throw new Error(data.error?.message || 'Generation failed');
+    if (!data.success) {
+      throw new Error(data.error?.message || 'Generation failed');
+    }
+
+    return data.data;
+  } catch (err) {
+    if (err.response && err.response.data && err.response.data.error) {
+      throw new Error(err.response.data.error.message);
+    }
+    throw err;
   }
-
-  return data.data;
 }
 
 /**
