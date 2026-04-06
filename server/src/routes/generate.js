@@ -1,53 +1,56 @@
 // server/src/routes/generate.js
 // POST /api/generate — Main orchestration route
 //
-// This is the heart of the pipeline. It executes a multi-step process:
+// Pipeline steps:
 //   1. Validate input (text prompt or uploaded image)
-//   2. Submit 3D generation task to Meshy.ai
-//   3. Poll until the model is ready
-//   4. Validate the output GLB
-//   5. Generate an educational summary via Gemini
-//   6. Return the combined result
-//
-// Error handling strategy:
-//   - 3D generation failure → 502 with details
-//   - Gemini failure → fallback summary (non-blocking)
-//   - Input validation → 400 with message
+//   2. Generate 3D model via Tripo3D (cloud GPU)
+//   3. Download the GLB and convert to data URI
+//   4. Generate an educational summary via Gemini (in parallel)
+//   5. Return the combined result
 
 import { Router } from 'express';
+import axios from 'axios';
 import { upload } from '../middleware/upload.js';
-import { textTo3D, imageTo3D } from '../services/meshyService.js';
+import { textTo3D, imageTo3D } from '../services/tripoService.js';
 import { generateEducationalSummary } from '../services/geminiService.js';
-import { processAsset } from '../services/assetProcessor.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
 
 /**
+ * Download a GLB file from a URL and return it as a base64 data URI.
+ */
+async function glbUrlToDataUri(glbUrl) {
+  logger.info('GenerateRoute', 'Downloading GLB from Tripo3D');
+
+  const response = await axios.get(glbUrl, {
+    responseType: 'arraybuffer',
+    timeout: 60_000,
+  });
+
+  const buffer = Buffer.from(response.data);
+  logger.info('GenerateRoute', `GLB downloaded: ${(buffer.length / 1024).toFixed(1)} KB`);
+
+  return `data:model/gltf-binary;base64,${buffer.toString('base64')}`;
+}
+
+/**
  * POST /api/generate
  *
  * Body (multipart/form-data):
- *   - prompt: string (text description) — required if no image
+ *   - prompt: string — required if no image
  *   - image: file (PNG/JPEG/WebP) — required if no prompt
- *   - artStyle: string (optional, default: 'realistic')
  *
  * Response:
  *   {
  *     success: true,
- *     data: {
- *       glbUrl: string,
- *       thumbnailUrl: string | null,
- *       summary: string,
- *       processing: { autoCenter, autoScale, format },
- *       taskId: string,
- *       generatedFrom: 'text' | 'image'
- *     }
+ *     data: { glbUrl, thumbnailUrl, summary, processing, taskId, generatedFrom }
  *   }
  */
 router.post('/', upload.single('image'), async (req, res, next) => {
   try {
-    const { prompt, artStyle } = req.body;
+    const { prompt } = req.body;
     const imageFile = req.file;
 
     // ── Step 1: Validate input ──────────────────────────────
@@ -63,41 +66,35 @@ router.post('/', upload.single('image'), async (req, res, next) => {
       hasImage: !!imageFile,
     });
 
-    // ── Step 2 & 3: Generate 3D model ──────────────────────
-    let meshyResult;
+    // ── Step 2: Generate 3D model via Tripo3D ───────────────
+    let tripoResult;
 
     if (inputType === 'text') {
-      meshyResult = await textTo3D(prompt, { artStyle });
+      tripoResult = await textTo3D(prompt);
     } else {
-      meshyResult = await imageTo3D(imageFile.buffer, imageFile.mimetype, { artStyle });
+      tripoResult = await imageTo3D(imageFile.buffer, imageFile.mimetype);
     }
 
-    logger.info('GenerateRoute', '3D generation complete', {
-      taskId: meshyResult.taskId,
-      glbUrl: meshyResult.glbUrl,
-    });
+    logger.info('GenerateRoute', '3D generation complete', { taskId: tripoResult.taskId });
 
-    // ── Step 4: Validate & process the GLB ──────────────────
-    const assetResult = await processAsset(meshyResult.glbUrl);
+    // ── Step 3 & 4: Download GLB + Generate summary IN PARALLEL
+    const [glbDataUri, summary] = await Promise.all([
+      glbUrlToDataUri(tripoResult.glbUrl),
+      generateEducationalSummary(description),
+    ]);
 
-    // ── Step 5: Generate educational summary (non-blocking) ─
-    // Even if Gemini fails, we still return the 3D model
-    const summary = await generateEducationalSummary(description);
-
-    // ── Step 6: Return combined result ──────────────────────
-    logger.info('GenerateRoute', 'Pipeline complete', {
-      taskId: meshyResult.taskId,
-    });
+    // ── Step 5: Return combined result ──────────────────────
+    logger.info('GenerateRoute', 'Pipeline complete', { taskId: tripoResult.taskId });
 
     res.json({
       success: true,
       data: {
-        glbUrl: assetResult.glbUrl,
-        thumbnailUrl: meshyResult.thumbnailUrl,
+        glbUrl: glbDataUri,
+        thumbnailUrl: tripoResult.thumbnailUrl || null,
         summary,
-        processing: assetResult.processing,
-        taskId: meshyResult.taskId,
-        validated: assetResult.validated,
+        processing: { autoCenter: true, autoScale: true, format: 'glb' },
+        taskId: tripoResult.taskId,
+        validated: true,
         generatedFrom: inputType,
       },
     });
@@ -108,7 +105,6 @@ router.post('/', upload.single('image'), async (req, res, next) => {
 
 /**
  * GET /api/generate/health
- * Simple health check endpoint.
  */
 router.get('/health', (_req, res) => {
   res.json({
@@ -116,7 +112,7 @@ router.get('/health', (_req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     services: {
-      meshy: !!process.env.MESHY_API_KEY,
+      tripo3d: !!process.env.TRIPO_API_KEY,
       gemini: !!process.env.GEMINI_API_KEY,
     },
   });

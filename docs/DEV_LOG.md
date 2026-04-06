@@ -14,16 +14,16 @@ Three.js is imperative: you create scenes, cameras, and renderers manually. This
 2. **Ecosystem** — `@react-three/drei` provides battle-tested abstractions: `<OrbitControls>`, `<Stage>` (professional lighting), `<Center>` (auto-centering), and `useGLTF` (async GLB loading with caching). These replaced ~200 lines of boilerplate.
 3. **Suspense** — R3F integrates with React Suspense, giving us free loading states while GLB files download.
 
-### Why Meshy.ai over alternatives?
+### Why Tripo3D over alternatives?
 
 | Evaluated | Pros | Cons | Decision |
 |-----------|------|------|----------|
-| **Meshy.ai** | Direct GLB output, simple REST API, good quality | ~60-120s generation time | ✅ Selected |
-| **Tripo3D** | Fast, good API | Newer, less documentation | Backup option |
-| **Shap-E (HuggingFace)** | Free, open source | Requires GPU, lower quality | ❌ Rejected |
+| **Tripo3D** | Fast cloud GPU, PBR textures, simple REST API, GLB output | Credit-based pricing | ✅ Selected |
+| **Meshy.ai** | Good quality, direct GLB output | ~60-120s generation time | Backup option |
+| **Shap-E (HuggingFace)** | Free, open source | Requires GPU, very slow on CPU, lower quality | ❌ Rejected |
 | **Point-E (OpenAI)** | Free | Very low quality, point clouds only | ❌ Rejected |
 
-Meshy.ai was chosen because it produces production-quality GLB files via a simple REST API with no GPU requirement. The async polling pattern (submit → poll task ID → get result) is clean and testable.
+Tripo3D was chosen for its fast cloud GPU generation (~60-90s), high-quality PBR textured GLB output, and clean async API. The polling pattern (submit → poll task ID → get result) is straightforward and testable.
 
 ### Why Express over FastAPI?
 
@@ -60,7 +60,9 @@ I chose **client-side processing** via drei's `<Stage>` and `<Center>` component
 2. R3F/drei handles centering and scaling in the scene graph, not the file
 3. The original GLB file remains unmodified for download
 
-Server-side processing (`assetProcessor.js`) performs validation (magic bytes check) to ensure the file is actually a GLB.
+### Parallel Execution
+
+The GLB download from Tripo3D and Gemini summary generation run in parallel via `Promise.all()`, reducing total pipeline time by overlapping these independent operations.
 
 ### State Machine in the Hook
 

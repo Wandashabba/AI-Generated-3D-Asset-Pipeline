@@ -1,122 +1,93 @@
-// client/src/components/ModelViewer.jsx
-// React Three Fiber 3D viewer with OrbitControls, Stage, and auto-scaling
-//
-// Key design decisions:
-//   - <Stage> from drei provides professional lighting and environment mapping
-//   - <Center> auto-centers the model regardless of its original origin
-//   - <OrbitControls> gives rotation, zoom, and pan with damping
-//   - Suspense boundary shows a loading indicator while the GLB downloads
 
-import { Suspense, useRef } from 'react';
+import { useRef, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stage, Center, useGLTF, Html, Environment } from '@react-three/drei';
+import { OrbitControls, Stage, Center, useGLTF } from '@react-three/drei';
 
-/**
- * Inner component that loads and renders the GLB model.
- * useGLTF handles caching and async loading automatically.
- */
 function Model({ url }) {
   const { scene } = useGLTF(url);
-  const modelRef = useRef();
-
-  return (
-    <Center>
-      <primitive
-        ref={modelRef}
-        object={scene}
-        dispose={null}
-      />
-    </Center>
-  );
+  return <primitive object={scene} />;
 }
 
-/**
- * Loading spinner shown while GLB is downloading.
- * Uses drei's Html component to overlay HTML inside the Canvas.
- */
-function Loader() {
-  return (
-    <Html center>
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-12 h-12 border-3 border-primary-500/30 border-t-primary-400 rounded-full animate-spin" />
-        <p className="text-sm text-surface-200/60 whitespace-nowrap">Loading 3D model...</p>
-      </div>
-    </Html>
-  );
-}
-
-/**
- * Empty state shown when no model is loaded.
- */
-function EmptyState() {
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-      <div className="w-20 h-20 rounded-2xl bg-surface-800/40 flex items-center justify-center text-4xl mb-4">
-        🧊
-      </div>
-      <h3 className="text-lg font-semibold text-surface-200/60 mb-1">
-        No Model Yet
-      </h3>
-      <p className="text-sm text-surface-200/30 max-w-xs">
-        Generate a 3D model from the input panel to see it rendered here with full rotation and zoom controls.
-      </p>
-    </div>
-  );
-}
-
-/**
- * Main 3D Viewer component.
- * @param {string|null} glbUrl - URL to the GLB model file
- */
 export default function ModelViewer({ glbUrl }) {
+  const containerRef = useRef(null);
+
   if (!glbUrl) {
     return (
-      <div className="relative w-full aspect-[4/3] lg:aspect-square rounded-2xl glass overflow-hidden animate-fade-in-up">
-        <EmptyState />
+      <div className="glass-card rounded-2xl w-full aspect-square md:aspect-video flex items-center justify-center relative overflow-hidden bg-white shadow-sm">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMCwgMCwgMCwgMC4wNSkiLz48L3N2Zz4=')] opacity-50" />
+        
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-[300px] h-[300px] rounded-full border border-surface-200 opacity-50 absolute"></div>
+          <div className="w-[450px] h-[450px] rounded-full border border-surface-200 opacity-30 absolute"></div>
+        </div>
+
+        <div className="relative flex flex-col items-center gap-6 z-10">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary-100 to-cyan-100 animate-spin-slow opacity-50 blur-lg" />
+            
+            <div className="relative w-20 h-20 rounded-2xl bg-white border-2 border-surface-200 shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--color-surface-300)" strokeWidth="1.5">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+            </div>
+
+            <div className="absolute top-[-10px] right-[-10px] w-4 h-4 rounded-full bg-accent-cyan shadow-sm animate-orbit" />
+          </div>
+
+          <div className="text-center bg-white/80 px-6 py-3 rounded-2xl backdrop-blur-md border border-surface-200 shadow-sm">
+            <h3 className="text-surface-950 font-bold text-lg" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              Awaiting Input
+            </h3>
+            <p className="text-surface-700 text-sm font-medium mt-1">
+              Your generated 3D model will appear here
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full aspect-[4/3] lg:aspect-square rounded-2xl glass overflow-hidden viewer-canvas animate-fade-in-up">
-      {/* Viewer Controls Hint */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-900/60 backdrop-blur-sm border border-surface-700/20">
-        <span className="text-xs text-surface-200/50">🖱️ Drag to rotate • Scroll to zoom</span>
+    <div className="glass-card rounded-2xl w-full aspect-square flex items-center justify-center overflow-hidden animate-fade-in relative bg-white border border-surface-300 shadow-md group">
+      
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-md border border-surface-200 shadow-sm">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-neon opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-neon"></span>
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-surface-950">Live Preview</span>
       </div>
 
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 45 }}
-        gl={{ antialias: true, alpha: true }}
-        dpr={[1, 2]}
-        shadows
-      >
-        {/* Lighting & Environment */}
-        <color attach="background" args={['#0f172a']} />
-        <fog attach="fog" args={['#0f172a', 8, 20]} />
+      <div className="absolute bottom-4 right-4 z-10 flex gap-2">
+        <div className="px-3 py-1.5 rounded-lg bg-white/80 backdrop-blur-md border border-surface-200 text-surface-800 text-xs font-semibold shadow-sm flex items-center gap-2">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 21a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5z"/><path d="M12 3v18"/><path d="M3 12h18"/></svg>
+          Scroll to Zoom
+        </div>
+        <div className="px-3 py-1.5 rounded-lg bg-white/80 backdrop-blur-md border border-surface-200 text-surface-800 text-xs font-semibold shadow-sm flex items-center gap-2">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M3 12h18"/><path d="M12 3c-2.5 0-4.5 4-4.5 9s2 9 4.5 9 4.5-4 4.5-9-2-9-4.5-9"/></svg>
+           Drag to Rotate
+        </div>
+      </div>
 
-        <Suspense fallback={<Loader />}>
-          <Stage
-            intensity={0.5}
-            environment="city"
-            adjustCamera={1.5}
-            shadows={{ type: 'contact', opacity: 0.4, blur: 2 }}
-          >
-            <Model url={glbUrl} />
-          </Stage>
-        </Suspense>
+      <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing">
+        <Canvas camera={{ position: [0, 2, 6], fov: 45 }} shadows>
+           <color attach="background" args={['#F8FAFC']} />
+           <ambientLight intensity={1.5} />
+           <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
+           <Suspense fallback={null}>
+             <Stage environment="city" intensity={0.6}>
+               <Center>
+                 <Model url={glbUrl} />
+               </Center>
+             </Stage>
+           </Suspense>
+           <OrbitControls autoRotate autoRotateSpeed={2} enableDamping dampingFactor={0.05} makeDefault />
+        </Canvas>
+      </div>
 
-        {/* Controls */}
-        <OrbitControls
-          makeDefault
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={1}
-          maxDistance={20}
-          enablePan={true}
-          autoRotate
-          autoRotateSpeed={1.5}
-        />
-      </Canvas>
+      <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
     </div>
   );
 }

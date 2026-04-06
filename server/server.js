@@ -10,6 +10,6 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   logger.info('Server', `🚀 API server running on http://localhost:${PORT}`);
   logger.info('Server', `Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info('Server', `Meshy API: ${process.env.MESHY_API_KEY ? '✓ configured' : '✗ missing'}`);
+  logger.info('Server', `Tripo3D API: ${process.env.TRIPO_API_KEY ? '✓ configured' : '✗ missing'}`);
   logger.info('Server', `Gemini API: ${process.env.GEMINI_API_KEY ? '✓ configured' : '✗ missing'}`);
 });

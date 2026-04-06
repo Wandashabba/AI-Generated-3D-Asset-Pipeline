@@ -5,14 +5,14 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Three.js](https://img.shields.io/badge/Three.js-R3F-black?logo=three.js)
 ![Express](https://img.shields.io/badge/Express-4-000?logo=express)
-![Meshy.ai](https://img.shields.io/badge/Meshy.ai-3D_Gen-purple)
+![Tripo3D](https://img.shields.io/badge/Tripo3D-3D_Gen-purple)
 ![Gemini](https://img.shields.io/badge/Gemini-2.0_Flash-blue?logo=google)
 
 ---
 
 ## ✨ Features
 
-- **Text-to-3D**: Describe any object and get a 3D model in seconds
+- **Text-to-3D**: Describe any object and get a 3D model in under a minute
 - **Image-to-3D**: Upload a reference image to generate a matching 3D asset
 - **Interactive Viewer**: Rotate, zoom, and pan the 3D model with React Three Fiber
 - **Educational Summaries**: AI-generated 2-sentence educational content about the object
@@ -22,7 +22,7 @@
 ## 🏗️ Architecture
 
 ```
-User Input → Express API → Meshy.ai (3D Gen) + Gemini (Summary) → GLB + Text → React Three Fiber Viewer
+User Input → Express API → Tripo3D (3D Gen) + Gemini (Summary) → GLB + Text → React Three Fiber Viewer
 ```
 
 ## 📦 Tech Stack
@@ -32,7 +32,7 @@ User Input → Express API → Meshy.ai (3D Gen) + Gemini (Summary) → GLB + Te
 | Frontend | React 19, Vite, Tailwind CSS v4 |
 | 3D Viewer | React Three Fiber, @react-three/drei |
 | Backend | Node.js, Express |
-| 3D Generation | Meshy.ai API |
+| 3D Generation | Tripo3D API |
 | Text Generation | Google Gemini 2.0 Flash |
 
 ## 🚀 Quick Start
@@ -40,7 +40,7 @@ User Input → Express API → Meshy.ai (3D Gen) + Gemini (Summary) → GLB + Te
 ### Prerequisites
 
 - Node.js 18+
-- [Meshy.ai API key](https://docs.meshy.ai) (free tier available)
+- [Tripo3D API key](https://platform.tripo3d.ai) (free tier available)
 - [Google Gemini API key](https://aistudio.google.com/apikey) (free tier available)
 
 ### 1. Clone & Install
@@ -91,7 +91,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 ├── server/                # Node.js Backend (Express)
 │   └── src/
 │       ├── routes/        # API routes
-│       ├── services/      # Business logic (Meshy, Gemini, Asset Processing)
+│       ├── services/      # Business logic (Tripo3D, Gemini)
 │       ├── middleware/     # Error handling, file upload
 │       └── utils/         # Logging
 │

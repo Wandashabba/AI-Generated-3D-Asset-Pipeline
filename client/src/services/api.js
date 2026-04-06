@@ -6,7 +6,7 @@ import { API_BASE } from '../utils/constants';
 
 const client = axios.create({
   baseURL: API_BASE,
-  timeout: 360_000, // 6 minutes (3D gen can take up to 5 min)
+  timeout: 300_000, // 5 min — Tripo3D typically generates in ~60-90s
 });
 
 /**

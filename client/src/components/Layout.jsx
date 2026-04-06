@@ -1,17 +1,15 @@
-// client/src/components/Layout.jsx
-// Page layout wrapper
 
 export default function Layout({ children }) {
   return (
-    <main className="min-h-screen pb-12">
-      {/* Background decorative elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600/8 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent-cyan/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-accent-violet/5 rounded-full blur-3xl" />
+    <main className="min-h-screen pb-16 relative bg-surface-50 overflow-hidden">
+
+      <div className="fixed inset-0 -z-10 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-primary-400/20 rounded-full blur-[100px] animate-float" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-accent-cyan/15 rounded-full blur-[90px] animate-float delay-200" style={{ animationDuration: '6s' }} />
+        <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] bg-accent-violet/15 rounded-full blur-[90px] animate-float delay-400" style={{ animationDuration: '5s' }} />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="w-screen max-w-none mx-auto px-[var(--page-gutter)] pt-8 relative z-0">
         {children}
       </div>
     </main>
